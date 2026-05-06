@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Моніторинг артеріального тиску</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --surface2: #1c2330;
+    --border: #30363d;
+    --accent: #e05c5c;
+    --accent2: #f0a070;
+    --accent3: #5cb8e0;
+    --ok: #3fb950;
+    --warn: #d29922;
+    --danger: #f85149;
+    --text: #e6edf3;
+    --text2: #8b949e;
+    --text3: #484f58;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    min-height: 100vh;
+    padding: 24px 16px 60px;
+    background-image:
+      radial-gradient(ellipse 60% 40% at 80% 10%, rgba(224,92,92,0.08) 0%, transparent 70%),
+      radial-gradient(ellipse 40% 60% at 10% 80%, rgba(92,184,224,0.06) 0%, transparent 70%);
+  }
+
+  header {
+    max-width: 720px;
+    margin: 0 auto 40px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 20px;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .logo-area h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(1.6rem, 5vw, 2.4rem);
+    line-height: 1.1;
+    color: var(--text);
+    letter-spacing: -0.02em;
+  }
+
+  .logo-area span {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--text2);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    display: block;
+    margin-top: 4px;
+  }
+
+  .pulse-badge {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.72rem;
+    color: var(--text2);
+    letter-spacing: 0.1em;
+  }
+
+  .pulse-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--ok);
+    animation: pulse-anim 2s infinite;
+  }
+
+  @keyframes pulse-anim {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(0.7); }
+  }
+
+  .main { max-width: 720px; margin: 0 auto; }
+
+  /* --- INPUT CARD --- */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 24px;
+  }
+
+  .card-title {
+    font-size: 0.7rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--text2);
+    margin-bottom: 20px;
+  }
+
+  .inputs-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+
+  .input-group label {
+    display: block;
+    font-size: 0.65rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text2);
+    margin-bottom: 8px;
+  }
+
+  .input-group input {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 1.4rem;
+    font-weight: 500;
+    padding: 12px 14px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    outline: none;
+    -moz-appearance: textfield;
+  }
+
+  .input-group input::-webkit-outer-spin-button,
+  .input-group input::-webkit-inner-spin-button { -webkit-appearance: none; }
+
+  .input-group input:focus {
+    border-color: var(--accent3);
+    box-shadow: 0 0 0 3px rgba(92,184,224,0.12);
+  }
+
+  .input-unit {
+    font-size: 0.65rem;
+    color: var(--text3);
+    margin-top: 5px;
+  }
+
+  .datetime-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+
+  .datetime-row input {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text2);
+    font-family: 'DM Mono', monospace;
+    font-size: 0.85rem;
+    padding: 10px 14px;
+    outline: none;
+    transition: border-color 0.2s;
+    color-scheme: dark;
+  }
+
+  .datetime-row input:focus { border-color: var(--accent3); }
+
+  .notes-input {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text2);
+    font-family: 'DM Mono', monospace;
+    font-size: 0.82rem;
+    padding: 10px 14px;
+    outline: none;
+    resize: none;
+    transition: border-color 0.2s;
+    margin-bottom: 20px;
+    height: 56px;
+  }
+
+  .notes-input:focus { border-color: var(--accent3); }
+
+  .btn-add {
+    width: 100%;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.8rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 13px;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.1s;
+  }
+
+  .btn-add:hover { background: #c94a4a; }
+  .btn-add:active { transform: scale(0.98); }
+
+  /* --- STATUS BAR --- */
+  .status-bar {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+
+  .stat-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px 18px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .stat-box::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+  }
+
+  .stat-box.ok::before { background: var(--ok); }
+  .stat-box.warn::before { background: var(--warn); }
+  .stat-box.danger::before { background: var(--danger); }
+  .stat-box.neutral::before { background: var(--border); }
+
+  .stat-label {
+    font-size: 0.62rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text2);
+    margin-bottom: 6px;
+  }
+
+  .stat-val {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.7rem;
+    color: var(--text);
+    line-height: 1;
+  }
+
+  .stat-sub {
+    font-size: 0.65rem;
+    color: var(--text3);
+    margin-top: 4px;
+  }
+
+  /* --- TABLE --- */
+  .table-wrap {
+    overflow-x: auto;
+  }
+
+  .records-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 14px;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .filter-row { display: flex; gap: 8px; flex-wrap: wrap; }
+
+  .filter-btn {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text2);
+    border-radius: 6px;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 5px 10px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .filter-btn.active, .filter-btn:hover {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+  }
+
+  .btn-clear {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text3);
+    border-radius: 6px;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 5px 10px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .btn-clear:hover { border-color: var(--danger); color: var(--danger); }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.8rem;
+    min-width: 480px;
+  }
+
+  thead th {
+    text-align: left;
+    font-size: 0.6rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text3);
+    padding: 8px 10px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  tbody tr {
+    border-bottom: 1px solid var(--border);
+    transition: background 0.15s;
+    animation: row-in 0.3s ease;
+  }
+
+  @keyframes row-in {
+    from { opacity: 0; transform: translateY(-8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  tbody tr:hover { background: var(--surface2); }
+
+  tbody td {
+    padding: 10px 10px;
+    color: var(--text2);
+    vertical-align: middle;
+  }
+
+  .bp-display {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.1rem;
+    color: var(--text);
+  }
+
+  .status-pill {
+    display: inline-block;
+    font-size: 0.6rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border-radius: 20px;
+    font-weight: 500;
+  }
+
+  .pill-ok { background: rgba(63,185,80,0.15); color: var(--ok); }
+  .pill-elevated { background: rgba(210,153,34,0.15); color: var(--warn); }
+  .pill-high1 { background: rgba(248,81,73,0.15); color: var(--danger); }
+  .pill-high2 { background: rgba(248,81,73,0.25); color: #ff9580; }
+  .pill-low { background: rgba(92,184,224,0.15); color: var(--accent3); }
+  .pill-crisis { background: rgba(248,81,73,0.4); color: #fff; }
+
+  .del-btn {
+    background: none;
+    border: none;
+    color: var(--text3);
+    cursor: pointer;
+    font-size: 1rem;
+    padding: 4px 6px;
+    border-radius: 4px;
+    transition: color 0.15s, background 0.15s;
+  }
+
+  .del-btn:hover { color: var(--danger); background: rgba(248,81,73,0.1); }
+
+  .empty-state {
+    text-align: center;
+    padding: 48px 20px;
+    color: var(--text3);
+    font-size: 0.8rem;
+    letter-spacing: 0.05em;
+  }
+
+  .empty-state .empty-icon { font-size: 2rem; margin-bottom: 12px; opacity: 0.4; }
+
+  /* LEGEND */
+  .legend {
+    margin-top: 28px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px 20px;
+  }
+
+  .legend-title {
+    font-size: 0.62rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--text3);
+    margin-bottom: 14px;
+  }
+
+  .legend-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 8px;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.72rem;
+    color: var(--text2);
+  }
+
+  .legend-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  @media (max-width: 500px) {
+    .inputs-row { grid-template-columns: 1fr 1fr; }
+    .status-bar { grid-template-columns: 1fr; }
+    .datetime-row { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo-area">
+    <h1>Артеріальний<br>тиск</h1>
+    <span>Щоденник моніторингу</span>
+  </div>
+  <div class="pulse-badge">
+    <div class="pulse-dot"></div>
+    Активний моніторинг
+  </div>
+</header>
+
+<div class="main">
+
+  <!-- INPUT -->
+  <div class="card">
+    <div class="card-title">▸ Новий запис</div>
+    <div class="inputs-row">
+      <div class="input-group">
+        <label>Систолічний</label>
+        <input type="number" id="sys" placeholder="120" min="60" max="250">
+        <div class="input-unit">мм рт.ст.</div>
+      </div>
+      <div class="input-group">
+        <label>Діастолічний</label>
+        <input type="number" id="dia" placeholder="80" min="40" max="150">
+        <div class="input-unit">мм рт.ст.</div>
+      </div>
+      <div class="input-group">
+        <label>Пульс</label>
+        <input type="number" id="pulse" placeholder="72" min="30" max="220">
+        <div class="input-unit">уд/хв</div>
+      </div>
+    </div>
+    <div class="datetime-row">
+      <div class="input-group">
+        <label>Дата</label>
+        <input type="date" id="date">
+      </div>
+      <div class="input-group">
+        <label>Час</label>
+        <input type="time" id="time">
+      </div>
+    </div>
+    <textarea class="notes-input" id="notes" placeholder="Нотатки (необов'язково): самопочуття, ліки, активність..."></textarea>
+    <button class="btn-add" onclick="addRecord()">+ Додати запис</button>
+  </div>
+
+  <!-- STATS -->
+  <div class="status-bar" id="statsBar">
+    <div class="stat-box neutral">
+      <div class="stat-label">Записів</div>
+      <div class="stat-val" id="statCount">0</div>
+      <div class="stat-sub">всього</div>
+    </div>
+    <div class="stat-box neutral" id="avgBox">
+      <div class="stat-label">Середній тиск</div>
+      <div class="stat-val" id="statAvg">—</div>
+      <div class="stat-sub">за весь час</div>
+    </div>
+    <div class="stat-box neutral" id="lastBox">
+      <div class="stat-label">Останній</div>
+      <div class="stat-val" id="statLast">—</div>
+      <div class="stat-sub" id="statLastTime">—</div>
+    </div>
+  </div>
+
+  <!-- RECORDS -->
+  <div class="card">
+    <div class="records-header">
+      <div class="card-title" style="margin:0">▸ Журнал вимірювань</div>
+      <div class="filter-row">
+        <button class="filter-btn active" onclick="setFilter('all', this)">Всі</button>
+        <button class="filter-btn" onclick="setFilter('ok', this)">Норма</button>
+        <button class="filter-btn" onclick="setFilter('elevated', this)">Підвищений</button>
+        <button class="filter-btn" onclick="setFilter('high', this)">Гіпертонія</button>
+        <button class="filter-btn" onclick="setFilter('low', this)">Гіпотонія</button>
+        <button class="btn-clear" onclick="clearAll()">Очистити все</button>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Дата / Час</th>
+            <th>Тиск</th>
+            <th>Пульс</th>
+            <th>Статус</th>
+            <th>Нотатки</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+      <div id="emptyState" class="empty-state">
+        <div class="empty-icon">♥</div>
+        <div>Записів поки немає.<br>Додайте перше вимірювання.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- LEGEND -->
+  <div class="legend">
+    <div class="legend-title">Класифікація артеріального тиску (ВООЗ)</div>
+    <div class="legend-grid">
+      <div class="legend-item"><div class="legend-dot" style="background:var(--accent3)"></div> Гіпотонія: &lt;90/60</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--ok)"></div> Норма: 90-119 / 60-79</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--warn)"></div> Підвищений: 120-129 / &lt;80</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--danger)"></div> Г-нія 1 ст.: 130-139 / 80-89</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#ff9580)"></div> Г-нія 2 ст.: 140-179 / 90-119</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#fff;border:1px solid var(--danger)"></div> Криза: ≥180 / ≥120</div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  let records = JSON.parse(localStorage.getItem('bp_records') || '[]');
+  let currentFilter = 'all';
+
+  // Set default date/time
+  function setDefaults() {
+    const now = new Date();
+    document.getElementById('date').value = now.toISOString().split('T')[0];
+    document.getElementById('time').value = now.toTimeString().slice(0, 5);
+  }
+  setDefaults();
+
+  function classify(sys, dia) {
+    if (sys >= 180 || dia >= 120) return { key: 'crisis', label: 'Криза', cls: 'pill-crisis' };
+    if (sys >= 140 || dia >= 90) return { key: 'high', label: 'Г-нія 2 ст.', cls: 'pill-high2' };
+    if (sys >= 130 || dia >= 80) return { key: 'high', label: 'Г-нія 1 ст.', cls: 'pill-high1' };
+    if (sys >= 120 && dia < 80) return { key: 'elevated', label: 'Підвищений', cls: 'pill-elevated' };
+    if (sys < 90 || dia < 60) return { key: 'low', label: 'Гіпотонія', cls: 'pill-low' };
+    return { key: 'ok', label: 'Норма', cls: 'pill-ok' };
+  }
+
+  function statClass(key) {
+    if (key === 'ok') return 'ok';
+    if (key === 'elevated') return 'warn';
+    if (key === 'low') return 'neutral';
+    return 'danger';
+  }
+
+  function addRecord() {
+    const sys = parseInt(document.getElementById('sys').value);
+    const dia = parseInt(document.getElementById('dia').value);
+    const pulse = parseInt(document.getElementById('pulse').value);
+    const date = document.getElementById('date').value;
+    const time = document.getElementById('time').value;
+    const notes = document.getElementById('notes').value.trim();
+
+    if (!sys || !dia || sys < 60 || sys > 250 || dia < 40 || dia > 150) {
+      shake(document.getElementById('sys').closest('.inputs-row'));
+      return;
+    }
+
+    const rec = { id: Date.now(), sys, dia, pulse: pulse || null, date, time, notes };
+    records.unshift(rec);
+    save();
+    render();
+
+    document.getElementById('sys').value = '';
+    document.getElementById('dia').value = '';
+    document.getElementById('pulse').value = '';
+    document.getElementById('notes').value = '';
+    setDefaults();
+  }
+
+  function shake(el) {
+    el.style.animation = 'none';
+    el.offsetHeight;
+    el.style.animation = 'shake 0.4s ease';
+    setTimeout(() => el.style.animation = '', 400);
+  }
+
+  function deleteRecord(id) {
+    records = records.filter(r => r.id !== id);
+    save();
+    render();
+  }
+
+  function clearAll() {
+    if (records.length === 0) return;
+    if (confirm('Видалити всі записи?')) {
+      records = [];
+      save();
+      render();
+    }
+  }
+
+  function setFilter(f, btn) {
+    currentFilter = f;
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    render();
+  }
+
+  function save() {
+    localStorage.setItem('bp_records', JSON.stringify(records));
+  }
+
+  function formatDate(d, t) {
+    if (!d) return '—';
+    const [y, m, day] = d.split('-');
+    return `${day}.${m}.${y}${t ? ' ' + t : ''}`;
+  }
+
+  function updateStats() {
+    const count = records.length;
+    document.getElementById('statCount').textContent = count;
+
+    if (count === 0) {
+      document.getElementById('statAvg').textContent = '—';
+      document.getElementById('statLast').textContent = '—';
+      document.getElementById('statLastTime').textContent = '—';
+      ['avgBox', 'lastBox'].forEach(id => {
+        const b = document.getElementById(id);
+        b.className = 'stat-box neutral';
+      });
+      return;
+    }
+
+    const avgSys = Math.round(records.reduce((s, r) => s + r.sys, 0) / count);
+    const avgDia = Math.round(records.reduce((s, r) => s + r.dia, 0) / count);
+    const avgClass = classify(avgSys, avgDia);
+    document.getElementById('statAvg').textContent = `${avgSys}/${avgDia}`;
+    document.getElementById('avgBox').className = `stat-box ${statClass(avgClass.key)}`;
+
+    const last = records[0];
+    const lastClass = classify(last.sys, last.dia);
+    document.getElementById('statLast').textContent = `${last.sys}/${last.dia}`;
+    document.getElementById('statLastTime').textContent = formatDate(last.date, last.time);
+    document.getElementById('lastBox').className = `stat-box ${statClass(lastClass.key)}`;
+  }
+
+  function render() {
+    updateStats();
+    const tbody = document.getElementById('tableBody');
+    const empty = document.getElementById('emptyState');
+
+    const filtered = currentFilter === 'all'
+      ? records
+      : records.filter(r => {
+          const c = classify(r.sys, r.dia);
+          if (currentFilter === 'high') return c.key === 'high' || c.key === 'crisis';
+          return c.key === currentFilter;
+        });
+
+    tbody.innerHTML = '';
+    empty.style.display = filtered.length === 0 ? 'block' : 'none';
+
+    filtered.forEach(r => {
+      const c = classify(r.sys, r.dia);
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${formatDate(r.date, r.time)}</td>
+        <td><span class="bp-display">${r.sys}/${r.dia}</span></td>
+        <td>${r.pulse ? r.pulse + ' уд/хв' : '—'}</td>
+        <td><span class="status-pill ${c.cls}">${c.label}</span></td>
+        <td style="max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${r.notes || '—'}</td>
+        <td><button class="del-btn" onclick="deleteRecord(${r.id})" title="Видалити">×</button></td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) addRecord();
+  });
+
+  // shake animation
+  const style = document.createElement('style');
+  style.textContent = `@keyframes shake {
+    0%,100%{transform:translateX(0)} 20%{transform:translateX(-6px)} 40%{transform:translateX(6px)} 60%{transform:translateX(-4px)} 80%{transform:translateX(4px)}
+  }`;
+  document.head.appendChild(style);
+
+  render();
+</script>
+</body>
+</html>
