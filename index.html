@@ -518,6 +518,7 @@
         <button class="filter-btn" onclick="setFilter('high', this)">Гіпертонія</button>
         <button class="filter-btn" onclick="setFilter('low', this)">Гіпотонія</button>
         <button class="btn-clear" onclick="clearAll()">Очистити все</button>
+        <button class="btn-clear" onclick="exportTxt()">Експорт TXT</button>
       </div>
     </div>
     <div class="table-wrap">
@@ -620,6 +621,29 @@
     records = records.filter(r => r.id !== id);
     save();
     render();
+  }
+
+  function exportTxt() {
+  if (records.length === 0) {
+    alert('Немає записів для експорту');
+    return;
+  }
+  let text = 'ЩОДЕННИК АРТЕРІАЛЬНОГО ТИСКУ\n';
+  text += '================================\n\n';
+  records.forEach(r => {
+    const c = classify(r.sys, r.dia);
+    text += `Дата: ${formatDate(r.date, r.time)}\n`;
+    text += `Тиск: ${r.sys}/${r.dia} мм рт.ст.\n`;
+    text += `Статус: ${c.label}\n`;
+    if (r.pulse) text += `Пульс: ${r.pulse} уд/хв\n`;
+    if (r.notes) text += `Нотатки: ${r.notes}\n`;
+    text += '---\n';
+  });
+  const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'тиск_' + new Date().toISOString().split('T')[0] + '.txt';
+  a.click();
   }
 
   function clearAll() {
